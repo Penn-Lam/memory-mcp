@@ -9,15 +9,18 @@ This demonstrates a working pattern for SSE-based MCP servers that provide code 
 ```bash
 # Install in editable mode from pyproject.toml
 uv pip install -e .
+
+OR
+
+uv pip install httpx "mcp[cli]" mem0ai
 ```
+
 3. Update `.env` file in the root directory with your mem0 API key:
 ```bash
 MEM0_API_KEY=your_api_key_here
 ```
 
 ## Usage
-
-**Note**: Make sure to supply `MEM0_API_KEY` in `.env` or as an environment variable.
 
 1. Start the MCP server:
 ```bash
