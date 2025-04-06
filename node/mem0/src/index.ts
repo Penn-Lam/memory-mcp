@@ -48,7 +48,7 @@ server.tool(
   "Add a new memory. This method is called everytime the user informs anything about themselves, their preferences, or anything that has any relevent information whcih can be useful in the future conversation. This can also be called when the user asks you to remember something.",
   {
     content: z.string().describe("The content to store in memory"),
-    userId: z.string().describe("User ID for memory storage. If not provided explicitly, use a generic user ID like, 'mem0-mcp-user'"),
+    userId: z.string().describe("User ID for memory storage. If not provided explicitly, use a generic user ID like, 'Penn-Lam'"),
   },
   async ({ content, userId }) => {
     await addMemory(content, userId);
@@ -68,7 +68,7 @@ server.tool(
   "Search through stored memories. This method is called ANYTIME the user asks anything.",
   {
     query: z.string().describe("The search query. This is the query that the user has asked for. Example: 'What did I tell you about the weather last week?' or 'What did I tell you about my friend John?'"),
-    userId: z.string().describe("User ID for memory storage. If not provided explicitly, use a generic user ID like, 'mem0-mcp-user"),
+    userId: z.string().describe("User ID for memory storage. If not provided explicitly, use a generic user ID like, 'Penn-Lam"),
   },
   async ({ query, userId }) => {
     const results = await searchMemories(query, userId);

@@ -16,7 +16,7 @@ mcp = FastMCP("mem0-mcp")
 
 # Initialize mem0 client and set default user
 mem0_client = MemoryClient()
-DEFAULT_USER_ID = "cursor_mcp"
+DEFAULT_USER_ID = "Penn-Lam"
 CUSTOM_INSTRUCTIONS = """
 Extract the Following Information:  
 
