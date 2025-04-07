@@ -19,6 +19,7 @@
   "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.8.0",
+    "dotenv": "^16.4.7",
     "mem0ai": "^2.1.11",
     "zod": "^3.24.2"
   },

@@ -2,9 +2,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { MemoryClient } from 'mem0ai';
+import * as dotenv from 'dotenv';
+
+// 加载环境变量
+dotenv.config();
 
 const MEM0_API_KEY = process?.env?.MEM0_API_KEY || '';
 const DEFAULT_USER_ID = process?.env?.DEFAULT_USER_ID || 'default_user';
+
+console.error('使用的用户 ID:', DEFAULT_USER_ID);
 
 // 初始化mem0ai客户端
 const memoryClient = new MemoryClient({ apiKey: MEM0_API_KEY });
@@ -20,9 +26,9 @@ const server = new McpServer({
 });
 
 // 添加记忆的辅助函数
-async function addMemory(content: string, userId: string = DEFAULT_USER_ID) {
+async function addMemory(content: string) {
   try {
-    await memoryClient.add(content, { user_id: userId });
+    await memoryClient.add(content, { user_id: DEFAULT_USER_ID });
     return `成功添加记忆: ${content}`;
   } catch (error) {
     console.error("添加记忆时出错:", error);
@@ -31,9 +37,9 @@ async function addMemory(content: string, userId: string = DEFAULT_USER_ID) {
 }
 
 // 搜索记忆的辅助函数
-async function searchMemories(query: string, userId: string = DEFAULT_USER_ID) {
+async function searchMemories(query: string) {
   try {
-    const results = await memoryClient.search(query, { user_id: userId, limit: 5 });
+    const results = await memoryClient.search(query, { user_id: DEFAULT_USER_ID, limit: 5 });
     // 返回统一格式，确保有 results 属性
     return Array.isArray(results) ? { results } : results;
   } catch (error) {
@@ -43,9 +49,9 @@ async function searchMemories(query: string, userId: string = DEFAULT_USER_ID) {
 }
 
 // 获取所有记忆的辅助函数
-async function getAllMemories(userId: string = DEFAULT_USER_ID) {
+async function getAllMemories() {
   try {
-    const memories = await memoryClient.getAll({ user_id: userId, page: 1, page_size: 50 });
+    const memories = await memoryClient.getAll({ user_id: DEFAULT_USER_ID, page: 1, page_size: 50 });
     // 返回统一格式，确保有 results 属性
     return Array.isArray(memories) ? { results: memories } : memories;
   } catch (error) {
@@ -55,7 +61,7 @@ async function getAllMemories(userId: string = DEFAULT_USER_ID) {
 }
 
 // 删除记忆的辅助函数
-async function deleteMemory(memoryId: string, userId: string = DEFAULT_USER_ID) {
+async function deleteMemory(memoryId: string) {
   try {
     await memoryClient.delete(memoryId);
     return `成功删除记忆 ID: ${memoryId}`;
@@ -66,7 +72,7 @@ async function deleteMemory(memoryId: string, userId: string = DEFAULT_USER_ID) 
 }
 
 // 更新记忆的辅助函数
-async function updateMemory(memoryId: string, newContent: string, userId: string = DEFAULT_USER_ID) {
+async function updateMemory(memoryId: string, newContent: string) {
   try {
     await memoryClient.update(memoryId, newContent);
     return `成功更新记忆 ID: ${memoryId}`;
@@ -77,9 +83,9 @@ async function updateMemory(memoryId: string, newContent: string, userId: string
 }
 
 // 添加对话记忆的辅助函数
-async function addConversationMemory(messages: any[], userId: string = DEFAULT_USER_ID) {
+async function addConversationMemory(messages: any[]) {
   try {
-    await memoryClient.add(messages, { user_id: userId });
+    await memoryClient.add(messages, { user_id: DEFAULT_USER_ID });
     return "成功添加对话记忆";
   } catch (error) {
     console.error("添加对话记忆时出错:", error);
@@ -99,10 +105,9 @@ server.tool(
   Example: If user says "I like coffee", store "I like coffee" NOT "User likes coffee".`,
   {
     content: z.string().describe("The content to store in memory"),
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
   },
-  async ({ content, userId = DEFAULT_USER_ID }) => {
-    const result = await addMemory(content, userId);
+  async ({ content }) => {
+    const result = await addMemory(content);
     return {
       content: [
         {
@@ -119,10 +124,9 @@ server.tool(
   "Search through stored memories. This method is called ANYTIME the user asks anything.",
   {
     query: z.string().describe("The search query. This is the query that the user has asked for. Example: 'What did I tell you about the weather last week?' or 'What did I tell you about my friend John?'"),
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
   },
-  async ({ query, userId = DEFAULT_USER_ID }) => {
-    const memories = await searchMemories(query, userId);
+  async ({ query }) => {
+    const memories = await searchMemories(query);
     
     if (!memories || !memories.results || memories.results.length === 0) {
       return {
@@ -155,11 +159,9 @@ server.tool(
 server.tool(
   "get-all-memories",
   "Get all memories for a specific user. This provides a complete view of all stored information about the user.",
-  {
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
-  },
-  async ({ userId = DEFAULT_USER_ID }) => {
-    const memories = await getAllMemories(userId);
+  {},
+  async () => {
+    const memories = await getAllMemories();
     
     if (!memories || !memories.results || memories.results.length === 0) {
       return {
@@ -182,7 +184,7 @@ server.tool(
       content: [
         {
           type: "text",
-          text: `用户 ${userId} 的所有记忆:\n` + results.join("\n"),
+          text: `用户 ${DEFAULT_USER_ID} 的所有记忆:\n` + results.join("\n"),
         },
       ],
     };
@@ -194,10 +196,9 @@ server.tool(
   "Delete a specific memory by its ID. Use this when information is no longer relevant or needs to be removed.",
   {
     memoryId: z.string().describe("The ID of the memory to delete"),
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
   },
-  async ({ memoryId, userId = DEFAULT_USER_ID }) => {
-    const result = await deleteMemory(memoryId, userId);
+  async ({ memoryId }) => {
+    const result = await deleteMemory(memoryId);
     return {
       content: [
         {
@@ -215,10 +216,9 @@ server.tool(
   {
     memoryId: z.string().describe("The ID of the memory to update"),
     newContent: z.string().describe("The new content for the memory"),
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
   },
-  async ({ memoryId, newContent, userId = DEFAULT_USER_ID }) => {
-    const result = await updateMemory(memoryId, newContent, userId);
+  async ({ memoryId, newContent }) => {
+    const result = await updateMemory(memoryId, newContent);
     return {
       content: [
         {
@@ -238,10 +238,9 @@ server.tool(
       role: z.string().describe("The role of the message sender (user or assistant)"),
       content: z.string().describe("The content of the message")
     })).describe("The conversation messages to store"),
-    userId: z.string().optional().describe("User ID for memory storage. If not provided explicitly, use a generic user ID"),
   },
-  async ({ messages, userId = DEFAULT_USER_ID }) => {
-    const result = await addConversationMemory(messages, userId);
+  async ({ messages }) => {
+    const result = await addConversationMemory(messages);
     return {
       content: [
         {
