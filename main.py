@@ -18,7 +18,7 @@ mcp = FastMCP("memory-mcp")
 
 # 初始化mem0客户端
 mem0_client = MemoryClient()
-DEFAULT_USER_ID = "Penn-Lam"
+DEFAULT_USER_ID = os.environ.get("DEFAULT_USER_ID", "default_user")
 
 @mcp.tool(
     description="""

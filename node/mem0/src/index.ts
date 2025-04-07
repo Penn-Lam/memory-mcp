@@ -4,7 +4,7 @@ import { z } from "zod";
 import { MemoryClient } from 'mem0ai';
 
 const MEM0_API_KEY = process?.env?.MEM0_API_KEY || '';
-const DEFAULT_USER_ID = "Penn-Lam";
+const DEFAULT_USER_ID = process?.env?.DEFAULT_USER_ID || 'default_user';
 
 // 初始化mem0ai客户端
 const memoryClient = new MemoryClient({ apiKey: MEM0_API_KEY });
@@ -22,7 +22,6 @@ const server = new McpServer({
 // 添加记忆的辅助函数
 async function addMemory(content: string, userId: string = DEFAULT_USER_ID) {
   try {
-    // 直接存储用户的原始信息，不做任何修改
     await memoryClient.add(content, { user_id: userId });
     return `成功添加记忆: ${content}`;
   } catch (error) {
