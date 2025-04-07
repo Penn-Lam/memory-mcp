@@ -1,7 +1,6 @@
-# MCP Server with Mem0 for Managing Coding Preferences
+# MCP Server with Mem0 for Managing Memory
 
-This demonstrates a structured approach for using an [MCP](https://modelcontextprotocol.io/introduction) server with [mem0](https://mem0.ai) to manage coding preferences efficiently. The server can be used with Cursor and provides essential tools for storing, retrieving, and searching coding preferences.
-
+This demonstrates a structured approach for using an [MCP](https://modelcontextprotocol.io/introduction) server with [mem0](https://mem0.ai) to manage Memory from different sources efficiently. 
 ## Installation
 
 1. Clone this repository
@@ -38,38 +37,51 @@ MEM0_API_KEY=your_api_key_here
 uv run main.py
 ```
 
-2. In Cursor, connect to the SSE endpoint, follow this [doc](https://docs.cursor.com/context/model-context-protocol) for reference:
+2. In MCP Client, connect to the SSE endpoint:
 
 ```
 http://0.0.0.0:8080/sse
 ```
 
-3. Open the Composer in Cursor and switch to `Agent` mode.
-
-## Demo with Cursor
-
-https://github.com/user-attachments/assets/56670550-fb11-4850-9905-692d3496231c
 
 ## Features
 
-The server provides three main tools for managing code preferences:
+The server provides comprehensive tools for managing Memory:
 
-1. `add_coding_preference`: Store code snippets, implementation details, and coding patterns with comprehensive context including:
-   - Complete code with dependencies
-   - Language/framework versions
-   - Setup instructions
-   - Documentation and comments
-   - Example usage
-   - Best practices
+1. `add_memory`: Store user information, preferences and important details
+- Stores the exact original message from users (first-person format)
+- Captures personal preferences and habits
+- Stores any relevant information for future conversations
+- Preserves context exactly as provided by the user
 
-2. `get_all_coding_preferences`: Retrieve all stored coding preferences to analyze patterns, review implementations, and ensure no relevant information is missed.
+2. `search_memories`: Find relevant memories using semantic search
+- Natural language understanding for flexible queries
+- Returns memories ranked by relevance
+- Useful for retrieving context before responding to users
+- Supports finding related information across different topics
 
-3. `search_coding_preferences`: Semantically search through stored coding preferences to find relevant:
-   - Code implementations
-   - Programming solutions
-   - Best practices
-   - Setup guides
-   - Technical documentation
+3. `get_all_memories`: View complete memory history
+- Retrieves all stored memories for a user
+- Includes creation timestamps for each memory
+- Provides full context of user interactions
+- Useful for analyzing memory patterns
+
+4. `delete_memory`: Remove specific memories
+- Delete memories by ID when no longer relevant
+- Maintain memory accuracy by removing outdated information
+- Supports GDPR compliance and privacy requests
+
+5. `update_memory`: Modify existing memories
+- Correct or update stored information
+- Keep memories current and accurate
+- Preserve memory IDs while updating content
+
+6. `add_conversation_memory`: Store complete conversations
+- Captures full dialog context between user and assistant
+- Stores message history with roles (user/assistant)
+- Preserves conversation flow for future reference
+- Useful for maintaining continuity in long-running conversations
+
 
 ## Why?
 
