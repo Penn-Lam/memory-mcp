@@ -34,7 +34,8 @@ async function addMemory(content: string, userId: string = DEFAULT_USER_ID) {
 async function searchMemories(query: string, userId: string = DEFAULT_USER_ID) {
   try {
     const results = await memoryClient.search(query, { user_id: userId, limit: 5 });
-    return results;
+    // 返回统一格式，确保有 results 属性
+    return Array.isArray(results) ? { results } : results;
   } catch (error) {
     console.error("搜索记忆时出错:", error);
     return { results: [] };
@@ -45,7 +46,8 @@ async function searchMemories(query: string, userId: string = DEFAULT_USER_ID) {
 async function getAllMemories(userId: string = DEFAULT_USER_ID) {
   try {
     const memories = await memoryClient.getAll({ user_id: userId, page: 1, page_size: 50 });
-    return memories;
+    // 返回统一格式，确保有 results 属性
+    return Array.isArray(memories) ? { results: memories } : memories;
   } catch (error) {
     console.error("获取记忆时出错:", error);
     return { results: [] };
@@ -55,7 +57,7 @@ async function getAllMemories(userId: string = DEFAULT_USER_ID) {
 // 删除记忆的辅助函数
 async function deleteMemory(memoryId: string, userId: string = DEFAULT_USER_ID) {
   try {
-    await memoryClient.delete({ memory_id: memoryId, user_id: userId });
+    await memoryClient.delete(memoryId);
     return `成功删除记忆 ID: ${memoryId}`;
   } catch (error) {
     console.error("删除记忆时出错:", error);
@@ -66,7 +68,7 @@ async function deleteMemory(memoryId: string, userId: string = DEFAULT_USER_ID) 
 // 更新记忆的辅助函数
 async function updateMemory(memoryId: string, newContent: string, userId: string = DEFAULT_USER_ID) {
   try {
-    await memoryClient.update({ memory_id: memoryId, content: newContent, user_id: userId });
+    await memoryClient.update(memoryId, newContent);
     return `成功更新记忆 ID: ${memoryId}`;
   } catch (error) {
     console.error("更新记忆时出错:", error);
