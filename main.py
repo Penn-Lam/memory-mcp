@@ -18,10 +18,18 @@ mcp = FastMCP("memory-mcp")
 
 # 初始化mem0客户端
 mem0_client = MemoryClient()
-DEFAULT_USER_ID = "default_user"
+DEFAULT_USER_ID = "Penn-Lam"
 
 @mcp.tool(
-    description="""Add a new memory. This method is called everytime the user informs anything about themselves, their preferences, or anything that has any relevent information whcih can be useful in the future conversation. This can also be called when the user asks you to remember something."""
+    description="""
+    Add a new memory. 
+    This method is called everytime the user informs anything about themselves, their preferences, 
+    or anything that has any relevent information whcih can be useful in the future conversation. 
+    This can also be called when the user asks you to remember something.
+    IMPORTANT: `content` must be the exact original message sent by the user. 
+    DO NOT rewrite or rephrase it to third person. Keep it in first person as the user said it.
+    Example: If user says "I like coffee", store "I like coffee" NOT "User likes coffee".
+    """
 )
 async def add_memory(content: str, userId: str = DEFAULT_USER_ID) -> str:
     """添加新的记忆到mem0。
@@ -30,7 +38,7 @@ async def add_memory(content: str, userId: str = DEFAULT_USER_ID) -> str:
     当用户提供关于自己的信息或要求记住某些内容时使用此工具。
     
     参数:
-        content: 要存储在记忆中的内容
+        content: 用户原始的信息
         userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
     """
     try:
