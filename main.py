@@ -8,127 +8,149 @@ import uvicorn
 from mem0 import MemoryClient
 from dotenv import load_dotenv
 import json
+import os
 
+# 加载环境变量
 load_dotenv()
 
-# Initialize FastMCP server for mem0 tools
-mcp = FastMCP("mem0-mcp")
+# 初始化FastMCP服务器
+mcp = FastMCP("memory-mcp")
 
-# Initialize mem0 client and set default user
+# 初始化mem0客户端
 mem0_client = MemoryClient()
-DEFAULT_USER_ID = "Penn-Lam"
-CUSTOM_INSTRUCTIONS = """
-Extract the Following Information:  
-
-- Code Snippets: Save the actual code for future reference.  
-- Explanation: Document a clear description of what the code does and how it works.
-- Related Technical Details: Include information about the programming language, dependencies, and system specifications.  
-- Key Features: Highlight the main functionalities and important aspects of the snippet.
-"""
-mem0_client.update_project(custom_instructions=CUSTOM_INSTRUCTIONS)
+DEFAULT_USER_ID = "default_user"
 
 @mcp.tool(
-    description="""Add a new coding preference to mem0. This tool stores code snippets, implementation details,
-    and coding patterns for future reference. Store every code snippet. When storing code, you should include:
-    - Complete code with all necessary imports and dependencies
-    - Language/framework version information (e.g., "Python 3.9", "React 18")
-    - Full implementation context and any required setup/configuration
-    - Detailed comments explaining the logic, especially for complex sections
-    - Example usage or test cases demonstrating the code
-    - Any known limitations, edge cases, or performance considerations
-    - Related patterns or alternative approaches
-    - Links to relevant documentation or resources
-    - Environment setup requirements (if applicable)
-    - Error handling and debugging tips
-    The preference will be indexed for semantic search and can be retrieved later using natural language queries."""
+    description="""Add a new memory. This method is called everytime the user informs anything about themselves, their preferences, or anything that has any relevent information whcih can be useful in the future conversation. This can also be called when the user asks you to remember something."""
 )
-async def add_coding_preference(text: str) -> str:
-    """Add a new coding preference to mem0.
-
-    This tool is designed to store code snippets, implementation patterns, and programming knowledge.
-    When storing code, it's recommended to include:
-    - Complete code with imports and dependencies
-    - Language/framework information
-    - Setup instructions if needed
-    - Documentation and comments
-    - Example usage
-
-    Args:
-        text: The content to store in memory, including code, documentation, and context
+async def add_memory(content: str, userId: str = DEFAULT_USER_ID) -> str:
+    """添加新的记忆到mem0。
+    
+    这个工具用于存储用户信息、偏好或任何可能在未来对话中有用的相关信息。
+    当用户提供关于自己的信息或要求记住某些内容时使用此工具。
+    
+    参数:
+        content: 要存储在记忆中的内容
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
     """
     try:
-        messages = [{"role": "user", "content": text}]
-        mem0_client.add(messages, user_id=DEFAULT_USER_ID, output_format="v1.1")
-        return f"Successfully added preference: {text}"
+        # 可以存储为简单语句
+        mem0_client.add(content, user_id=userId)
+        return f"成功添加记忆: {content}"
     except Exception as e:
-        return f"Error adding preference: {str(e)}"
+        return f"添加记忆时出错: {str(e)}"
 
 @mcp.tool(
-    description="""Retrieve all stored coding preferences for the default user. Call this tool when you need 
-    complete context of all previously stored preferences. This is useful when:
-    - You need to analyze all available code patterns
-    - You want to check all stored implementation examples
-    - You need to review the full history of stored solutions
-    - You want to ensure no relevant information is missed
-    Returns a comprehensive list of:
-    - Code snippets and implementation patterns
-    - Programming knowledge and best practices
-    - Technical documentation and examples
-    - Setup and configuration guides
-    Results are returned in JSON format with metadata."""
+    description="""Search through stored memories. This method is called ANYTIME the user asks anything."""
 )
-async def get_all_coding_preferences() -> str:
-    """Get all coding preferences for the default user.
-
-    Returns a JSON formatted list of all stored preferences, including:
-    - Code implementations and patterns
-    - Technical documentation
-    - Programming best practices
-    - Setup guides and examples
-    Each preference includes metadata about when it was created and its content type.
+async def search_memories(query: str, userId: str = DEFAULT_USER_ID) -> str:
+    """搜索存储的记忆。
+    
+    使用语义搜索来查找与查询相关的记忆。
+    每当用户询问任何内容时，都应该调用此方法。
+    
+    参数:
+        query: 搜索查询。这是用户提出的查询。例如："上周我告诉你关于天气的什么？"或"我告诉过你关于我朋友小明的什么？"
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
     """
     try:
-        memories = mem0_client.get_all(user_id=DEFAULT_USER_ID, page=1, page_size=50)
-        flattened_memories = [memory["memory"] for memory in memories["results"]]
-        return json.dumps(flattened_memories, indent=2)
+        memories = mem0_client.search(query, user_id=userId, limit=5)
+        if not memories or not memories.get("results"):
+            return "未找到相关记忆。"
+        
+        results = []
+        for i, result in enumerate(memories["results"], 1):
+            memory_content = result.get("memory", "")
+            score = result.get("score", 0)
+            results.append(f"{i}. {memory_content} (相关度: {score:.4f})")
+        
+        return "找到以下相关记忆:\n" + "\n".join(results)
     except Exception as e:
-        return f"Error getting preferences: {str(e)}"
+        return f"搜索记忆时出错: {str(e)}"
 
 @mcp.tool(
-    description="""Search through stored coding preferences using semantic search. This tool should be called 
-    for EVERY user query to find relevant code and implementation details. It helps find:
-    - Specific code implementations or patterns
-    - Solutions to programming problems
-    - Best practices and coding standards
-    - Setup and configuration guides
-    - Technical documentation and examples
-    The search uses natural language understanding to find relevant matches, so you can
-    describe what you're looking for in plain English. Always search the preferences before 
-    providing answers to ensure you leverage existing knowledge."""
+    description="""Get all memories for a specific user. This provides a complete view of all stored information about the user."""
 )
-async def search_coding_preferences(query: str) -> str:
-    """Search coding preferences using semantic search.
-
-    The search is powered by natural language understanding, allowing you to find:
-    - Code implementations and patterns
-    - Programming solutions and techniques
-    - Technical documentation and guides
-    - Best practices and standards
-    Results are ranked by relevance to your query.
-
-    Args:
-        query: Search query string describing what you're looking for. Can be natural language
-              or specific technical terms.
+async def get_all_memories(userId: str = DEFAULT_USER_ID) -> str:
+    """获取特定用户的所有记忆。
+    
+    返回用户的所有存储记忆，提供完整的用户信息视图。
+    
+    参数:
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
     """
     try:
-        memories = mem0_client.search(query, user_id=DEFAULT_USER_ID, output_format="v1.1")
-        flattened_memories = [memory["memory"] for memory in memories["results"]]
-        return json.dumps(flattened_memories, indent=2)
+        memories = mem0_client.get_all(user_id=userId, page=1, page_size=50)
+        if not memories or not memories.get("results"):
+            return "该用户没有存储的记忆。"
+        
+        results = []
+        for i, memory in enumerate(memories["results"], 1):
+            memory_content = memory.get("memory", "")
+            created_at = memory.get("created_at", "")
+            results.append(f"{i}. {memory_content}\n   创建时间: {created_at}")
+        
+        return f"用户 {userId} 的所有记忆:\n" + "\n".join(results)
     except Exception as e:
-        return f"Error searching preferences: {str(e)}"
+        return f"获取记忆时出错: {str(e)}"
+
+@mcp.tool(
+    description="""Delete a specific memory by its ID. Use this when information is no longer relevant or needs to be removed."""
+)
+async def delete_memory(memoryId: str, userId: str = DEFAULT_USER_ID) -> str:
+    """删除特定的记忆。
+    
+    通过记忆ID删除特定的记忆。当信息不再相关或需要被移除时使用此工具。
+    
+    参数:
+        memoryId: 要删除的记忆的ID
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
+    """
+    try:
+        mem0_client.delete(memory_id=memoryId, user_id=userId)
+        return f"成功删除记忆 ID: {memoryId}"
+    except Exception as e:
+        return f"删除记忆时出错: {str(e)}"
+
+@mcp.tool(
+    description="""Update an existing memory with new content. Use this to modify or correct previously stored information."""
+)
+async def update_memory(memoryId: str, newContent: str, userId: str = DEFAULT_USER_ID) -> str:
+    """更新现有记忆的内容。
+    
+    修改或更正先前存储的信息。
+    
+    参数:
+        memoryId: 要更新的记忆的ID
+        newContent: 记忆的新内容
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
+    """
+    try:
+        mem0_client.update(memory_id=memoryId, content=newContent, user_id=userId)
+        return f"成功更新记忆 ID: {memoryId}"
+    except Exception as e:
+        return f"更新记忆时出错: {str(e)}"
+
+@mcp.tool(
+    description="""Add a conversation as memory. This stores an entire conversation thread between the user and assistant."""
+)
+async def add_conversation_memory(messages: list, userId: str = DEFAULT_USER_ID) -> str:
+    """添加对话作为记忆。
+    
+    存储用户和助手之间的整个对话线程。
+    
+    参数:
+        messages: 对话消息列表，格式为[{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
+        userId: 用户ID，用于记忆存储。如果未明确提供，则使用默认用户ID
+    """
+    try:
+        mem0_client.add(messages, user_id=userId)
+        return "成功添加对话记忆"
+    except Exception as e:
+        return f"添加对话记忆时出错: {str(e)}"
 
 def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
-    """Create a Starlette application that can server the provied mcp server with SSE."""
+    """创建一个可以使用SSE为提供的mcp服务器提供服务的Starlette应用程序。"""
     sse = SseServerTransport("/messages/")
 
     async def handle_sse(request: Request) -> None:
@@ -151,18 +173,18 @@ def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlett
         ],
     )
 
-
 if __name__ == "__main__":
     mcp_server = mcp._mcp_server
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='Run MCP SSE-based server')
-    parser.add_argument('--host', default='0.0.0.0', help='Host to bind to')
-    parser.add_argument('--port', type=int, default=8080, help='Port to listen on')
+    parser = argparse.ArgumentParser(description='运行基于SSE的MCP记忆服务器')
+    parser.add_argument('--host', default='0.0.0.0', help='绑定的主机')
+    parser.add_argument('--port', type=int, default=8080, help='监听的端口')
     args = parser.parse_args()
 
-    # Bind SSE request handling to MCP server
+    # 绑定SSE请求处理到MCP服务器
     starlette_app = create_starlette_app(mcp_server, debug=True)
 
+    print(f"启动记忆MCP服务器，监听 {args.host}:{args.port}")
     uvicorn.run(starlette_app, host=args.host, port=args.port)
