@@ -4,10 +4,41 @@ A Model Context Protocol (MCP) server that provides memory storage and retrieval
 
 ## Features
 
-- Store memories with user-specific context
-- Search through stored memories with relevance scoring
-- Simple and intuitive API
-- Built on the Model Context Protocol
+The server provides comprehensive tools for managing Memory:
+
+1. `add_memory`: Store user information, preferences and important details
+- Stores the exact original message from users (first-person format)
+- Captures personal preferences and habits
+- Stores any relevant information for future conversations
+- Preserves context exactly as provided by the user
+
+2. `search_memories`: Find relevant memories using semantic search
+- Natural language understanding for flexible queries
+- Returns memories ranked by relevance
+- Useful for retrieving context before responding to users
+- Supports finding related information across different topics
+
+3. `get_all_memories`: View complete memory history
+- Retrieves all stored memories for a user
+- Includes creation timestamps for each memory
+- Provides full context of user interactions
+- Useful for analyzing memory patterns
+
+4. `delete_memory`: Remove specific memories
+- Delete memories by ID when no longer relevant
+- Maintain memory accuracy by removing outdated information
+- Supports GDPR compliance and privacy requests
+
+5. `update_memory`: Modify existing memories
+- Correct or update stored information
+- Keep memories current and accurate
+- Preserve memory IDs while updating content
+
+6. `add_conversation_memory`: Store complete conversations
+- Captures full dialog context between user and assistant
+- Stores message history with roles (user/assistant)
+- Preserves conversation flow for future reference
+- Useful for maintaining continuity in long-running conversations
 
 ## Prerequisites
 
@@ -22,67 +53,12 @@ A Model Context Protocol (MCP) server that provides memory storage and retrieval
 npm install
 ```
 
-3. Create a `.env` file in the root directory and add your Mem0 API key:
+3. Create a `.env` file in the root directory and add your Mem0 API key and user ID:
 ```bash
 MEM0_API_KEY=your-api-key-here
+DEFAULT_USER_ID=<your-user-id>
 ```
 
-## Usage
-
-The server provides two main tools:
-
-### 1. Adding Memories
-
-Store new memories with user-specific context:
-
-```typescript
-await server.tool("add-memory", {
-  content: "User prefers dark mode interface",
-  userId: "alice"
-});
-```
-
-### 2. Searching Memories
-
-Search through stored memories to retrieve relevant information:
-
-```typescript
-const results = await server.tool("search-memories", {
-  query: "What are the user's interface preferences?",
-  userId: "alice"
-});
-```
-
-The search results will include:
-- Memory content
-- Relevance score
-- Formatted output for easy integration
-
-## Response Format
-
-### Add Memory Response
-```json
-{
-  "content": [
-    {
-      "type": "text",
-      "text": "Memory added successfully"
-    }
-  ]
-}
-```
-
-### Search Memory Response
-```json
-{
-  "content": [
-    {
-      "type": "text",
-      "text": "Memory: User prefers dark mode interface\nRelevance: 0.95\n---"
-    }
-  ]
-}
-```
 
 ## Development
 
@@ -100,9 +76,7 @@ To build the project:
 npm run build
 ```
 
-## Environment Variables
 
-- `MEM0_API_KEY`: Your Mem0 API key (required)
 
 ## License
 

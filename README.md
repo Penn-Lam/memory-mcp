@@ -23,10 +23,11 @@ source .venv/bin/activate
 uv pip install -e .
 ```
 
-5. Update `.env` file in the root directory with your mem0 API key:
+5. Create `.env` file in the root directory with your mem0 API key and user ID:
 
 ```bash
 MEM0_API_KEY=your_api_key_here
+DEFAULT_USER_ID=<your-user-id>
 ```
 
 ## Usage
